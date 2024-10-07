@@ -1,0 +1,339 @@
+---
+title: "Data Analytic Report"
+author: "Sayan Andrews (5311352)"
+date: "`r format(Sys.Date(), '%5/%25/%2023')`"
+output: pdf_document
+---
+
+```{r setup, echo=FALSE}
+library(knitr)
+# set global chunk options: images will be 7x5 inches
+knitr::opts_chunk$set(fig.width=7, fig.height=5)
+options(digits = 4)
+
+
+## indents are for indenting r code as formatted text
+## They may need to be adjusted depending on your OS
+# if your output looks odd, increase or decrease indent
+indent1 = '    '
+indent2 = '        '
+indent3 = '            '
+```
+``` {r}
+polls_data_2016 <- read.csv(file = "president_general_polls_sorted_end_date_2016.csv")
+polls_data_2020 <- read.csv(file = "president_polls_2020.csv")
+```
+1. a) We can see that Clinton is ahead in the state of Michigan, by a percentage difference of 3.315%. Trump is ahead in the state of Georgia, by a percentage difference of -5.54%. Clinton is barely ahead in the state of North Carolina, by a percentage difference of 0.66%.
+``` {r}
+polls_data_2016_enddate=mdy(polls_data_2016$enddate)
+polls_data_2016=polls_data_2016[which(polls_data_2016_enddate>="2016-08-01"),]
+index_mich=which(polls_data_2016$state=="Michigan")
+index_georgia=which(polls_data_2016$state=="Georgia")
+index_nc=which(polls_data_2016$state=="North Carolina")
+n1=sum(polls_data_2016$total.clinton[index_mich])
+n2=sum(polls_data_2016$total.trump[index_mich])
+n1/(n1+n2)-n2/(n1+n2)
+n3=sum(polls_data_2016$total.clinton[index_georgia])
+n4=sum(polls_data_2016$total.trump[index_georgia])
+n3/(n3+n4)-n4/(n3+n4)
+n5=sum(polls_data_2016$total.clinton[index_nc])
+n6=sum(polls_data_2016$total.trump[index_nc])
+n5/(n5+n6)-n6/(n5+n6)
+date_mich <- mdy(polls_data_2016$enddate[index_mich])
+percentage_diff_mich=(polls_data_2016$total.clinton[index_mich]-polls_data_2016$total.trump[index_mich])/(polls_data_2016$total.clinton[index_mich]+polls_data_2016$total.trump[index_mich])
+plot(date_mich,percentage_diff_mich,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Michigan')
+abline(a=0,b=0)
+date_georgia <- mdy(polls_data_2016$enddate[index_georgia])
+percentage_diff_georgia=(polls_data_2016$total.clinton[index_georgia]-polls_data_2016$total.trump[index_georgia])/(polls_data_2016$total.clinton[index_georgia]+polls_data_2016$total.trump[index_georgia])
+plot(date_georgia,percentage_diff_georgia,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Georgia')
+abline(a=0,b=0)
+date_nc <- mdy(polls_data_2016$enddate[index_nc])
+percentage_diff_nc=(polls_data_2016$total.clinton[index_nc]-polls_data_2016$total.trump[index_nc])/(polls_data_2016$total.clinton[index_nc]+polls_data_2016$total.trump[index_nc])
+plot(date_nc,percentage_diff_nc,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+abline(a=0,b=0)
+```
+(b) Based on these pair t-tests, the p value for Michigan is <2e-16, a very small p value, meaning we reject the null hypothesis, so Clinton is in favor of winning because the difference of her-Trump is greater than 0. The p value for Georgia is 1, a very high p value, so we fail to reject the null hypothesis, but this only tells us that the true difference in means is about 0, not that Trump is in favor of winning in Georgia. Here arises the problem with this test, in that it would need multiple alternatives, or the means to find a negative difference in order to rule Trump in favor of winning that particular state. Therefore, this test lacks significance because it only is able to factor in negligible difference or difference in favor of Clinton, given that our test statistic is Clinton-Trump. The p value for North Carolina is 0.02, which would be lower than the standard significance level of 0.05, so we would reject the null and find Clinton ahead. But it is ambiguous as to if this makes sense for North Carolina, given that there was a very small percentage difference that we found for this state in part (a). A potential problem with this test is that it assumes that all trials are independent, when that may not necessarily be the case.
+``` {r}
+t.test(polls_data_2016$total.clinton[index_mich],polls_data_2016$total.trump[index_mich],paired=T,alternative='greater')
+t.test(polls_data_2016$total.clinton[index_georgia],polls_data_2016$total.trump[index_georgia],paired=T,alternative='greater')
+t.test(polls_data_2016$total.clinton[index_nc],polls_data_2016$total.trump[index_nc],paired=T,alternative='greater')
+```
+(c) Based on these Wilcox Sign Rank tests, Clinton is in favor of winning again in Michigan with a p value of 0.01, leading us to reject the null hypothesis that the location shift between her and Trump is 0, in favor of it being greater than 0. However, with p values of 1 and 0.6 for Georgia and North Carolina, we again run into the same problem of ambiguity as with the paired t tests in part While these results lead us to fail to reject the null hypothesis, we are left with the notion that the true location shift is 0, meaning Clinton and Trump hold the same favor in those states, but this is simply not true. Given that in part (a), we were able to determine statistically significant percentage difference in Georgia specifically in favor of Trump, we again have the same problem that when there is no rejection of the null, we have no determination of whether or not Trump won favor in that state with these tests, as that would require a negative difference to be determined from this test, which is not possible under the current circumstances of hypotheses.
+``` {r}
+wilcox.test(polls_data_2016$total.clinton[index_mich], polls_data_2016$total.trump[index_mich], alternative = "greater")
+wilcox.test(polls_data_2016$total.clinton[index_georgia], polls_data_2016$total.trump[index_georgia], alternative = "greater")
+wilcox.test(polls_data_2016$total.clinton[index_nc], polls_data_2016$total.trump[index_nc], alternative = "greater")
+```
+(d) From the linear model and observations, North Carolina may have the closest election by percentage difference. Looking at all of the graphs below, North Carolina shows the best linear fit, with a cluster by the line at a 0.0% difference, especially in the months of Aug-Nov that we are looking in particular.
+``` {r}
+date_mi <- mdy(polls_data_2016$enddate[index_mich])
+date_ga <- mdy(polls_data_2016$enddate[index_georgia])
+date_nc <- mdy(polls_data_2016$enddate[index_nc])
+index_date_mi_aug_nov=which(date_mi >="2016-08-01")
+index_date_ga_aug_nov=which(date_ga >="2016-08-01")
+index_date_nc_aug_nov=which(date_nc >="2016-08-01")
+percentage_diff_mi=(polls_data_2016$total.clinton[index_date_mi_aug_nov]-polls_data_2016$total.trump[index_date_mi_aug_nov])/(polls_data_2016$total.clinton[index_date_mi_aug_nov]+polls_data_2016$total.trump[index_date_mi_aug_nov])
+percentage_diff_ga=(polls_data_2016$total.clinton[index_date_ga_aug_nov]-polls_data_2016$total.trump[index_date_ga_aug_nov])/(polls_data_2016$total.clinton[index_date_ga_aug_nov]+polls_data_2016$total.trump[index_date_ga_aug_nov])
+percentage_diff_nc=(polls_data_2016$total.clinton[index_date_nc_aug_nov]-polls_data_2016$total.trump[index_date_nc_aug_nov])/(polls_data_2016$total.clinton[index_date_nc_aug_nov]+polls_data_2016$total.trump[index_date_nc_aug_nov])
+counts_mi_for_lm <- data.frame(
+  data_date = date_mi[index_date_mi_aug_nov],
+  percentage_diff = percentage_diff_mi
+)
+counts_ga_for_lm <- data.frame(
+  data_date = date_ga[index_date_ga_aug_nov],
+  percentage_diff = percentage_diff_ga
+)
+counts_nc_for_lm <- data.frame(
+  data_date = date_nc[index_date_nc_aug_nov],
+  percentage_diff = percentage_diff_nc
+)
+lm_model_mi=lm(percentage_diff~(data_date),data=counts_mi_for_lm)
+lm_model_ga=lm(percentage_diff~(data_date),data=counts_ga_for_lm)
+lm_model_nc=lm(percentage_diff~(data_date),data=counts_nc_for_lm)
+summary(lm_model_mi)
+summary(lm_model_ga)
+summary(lm_model_nc)
+conf_interval_mi_fitted = predict(lm_model_mi, newdata=counts_mi_for_lm, interval="confidence", level = 0.95)
+conf_interval_ga_fitted = predict(lm_model_ga, newdata=counts_ga_for_lm, interval="confidence", level = 0.95)
+conf_interval_nc_fitted = predict(lm_model_nc, newdata=counts_nc_for_lm, interval="confidence", level = 0.95)
+plot(counts_mi_for_lm$data_date,counts_mi_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Michigan')
+polygon(c(rev(counts_mi_for_lm$data_date), counts_mi_for_lm$data_date), 
+        c(rev(conf_interval_mi_fitted[,2]), conf_interval_mi_fitted[ ,3]), col = 'grey80', border = NA)
+lines(counts_mi_for_lm$data_date,counts_mi_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Michigan')
+lines(counts_mi_for_lm$data_date,lm_model_mi$fitted.values,
+      col='black',pch=20,type='l',xlab='date',ylab='difference in counts (%)',main='Michigan')
+plot(counts_ga_for_lm$data_date,counts_ga_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Georgia')
+polygon(c(rev(counts_ga_for_lm$data_date), counts_ga_for_lm$data_date), 
+        c(rev(conf_interval_ga_fitted[,2]), conf_interval_ga_fitted[ ,3]), col = 'grey80', border = NA)
+lines(counts_ga_for_lm$data_date,counts_ga_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Georgia')
+lines(counts_ga_for_lm$data_date,lm_model_ga$fitted.values,
+      col='black',pch=20,type='l',xlab='date',ylab='difference in counts (%)',main='Georgia')
+plot(counts_nc_for_lm$data_date,counts_nc_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+polygon(c(rev(counts_nc_for_lm$data_date), counts_nc_for_lm$data_date), 
+        c(rev(conf_interval_nc_fitted[,2]), conf_interval_nc_fitted[ ,3]), col = 'grey80', border = NA)
+lines(counts_nc_for_lm$data_date,counts_nc_for_lm$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+lines(counts_nc_for_lm$data_date,lm_model_nc$fitted.values,
+      col='black',pch=20,type='l',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+```
+(e) From the real results of the 2016 election, Michigan had the smallest margin in terms of percentage difference, with a 0.3 percent difference. Two reasons for which the real results may differ from what the polls indicate are sampling and response bias, as well as methodological issues.
+
+(f) Polls do not always correctly predict the candidate who wins each state in an election. There can be biases in polls that contribute to these inaccuracies. Some possible reasons for poll biases in predicting state winners include sampling bias and non response bias.
+
+2. (a) From the data we can see that Biden was leading in Michigan by a 8.232% difference. Biden was leading Georgia by a 3.378% difference. Finally, Biden was leading North Carolina by a 5.841% difference.
+``` {r}
+date_2020= mdy(polls_data_2020$end_date)
+date_2020_latest_day=date_2020[1]
+index_selected=which(date_2020>='2020-08-01')
+polls_data_2020=polls_data_2020[index_selected,]
+index_na=which(is.na(polls_data_2020$sample_size)==T)
+index_na
+polls_data_2020_question_id_num=unique(polls_data_2020$question_id)
+for(i in 1:length(unique(polls_data_2020$question_id)) ){
+  index_set=which(polls_data_2020$question_id==polls_data_2020_question_id_num[i])
+  if(length(index_set)!=2){
+    polls_data_2020=polls_data_2020[-index_set,]
+  }
+}
+index_NA=which(is.na(polls_data_2020$sample_size)==T)
+index_NA
+polls_data_2020=polls_data_2020[-index_NA,]
+index_biden_mich_2020=which(polls_data_2020$answer=='Biden' & polls_data_2020$state=="Michigan")
+index_trump_mich_2020=which(polls_data_2020$answer=='Trump' & polls_data_2020$state=="Michigan")
+index_biden_georgia_2020=which(polls_data_2020$answer=='Biden' & polls_data_2020$state=="Georgia")
+index_trump_georgia_2020=which(polls_data_2020$answer=='Trump' & polls_data_2020$state=="Georgia")
+index_biden_nc_2020=which(polls_data_2020$answer=='Biden' & polls_data_2020$state=="North Carolina")
+index_trump_nc_2020=which(polls_data_2020$answer=='Trump' & polls_data_2020$state=="North Carolina")
+counts_biden_mich_2020=polls_data_2020$pct[index_biden_mich_2020]*polls_data_2020$sample_size[index_biden_mich_2020]
+counts_trump_mich_2020=polls_data_2020$pct[index_trump_mich_2020]*polls_data_2020$sample_size[index_trump_mich_2020]
+n1_2020_mich=sum(counts_biden_mich_2020)
+n2_2020_mich=sum(counts_trump_mich_2020)
+(n1_2020_mich-n2_2020_mich)/(n1_2020_mich+n2_2020_mich)
+counts_biden_georgia_2020=polls_data_2020$pct[index_biden_georgia_2020]*polls_data_2020$sample_size[index_biden_georgia_2020]
+counts_trump_georgia_2020=polls_data_2020$pct[index_trump_georgia_2020]*polls_data_2020$sample_size[index_trump_georgia_2020]
+n1_2020_georgia=sum(counts_biden_georgia_2020)
+n2_2020_georgia=sum(counts_trump_georgia_2020)
+(n1_2020_georgia-n2_2020_georgia)/(n1_2020_georgia+n2_2020_georgia)
+counts_biden_nc_2020=polls_data_2020$pct[index_biden_nc_2020]*polls_data_2020$sample_size[index_biden_nc_2020]
+counts_trump_nc_2020=polls_data_2020$pct[index_trump_nc_2020]*polls_data_2020$sample_size[index_trump_nc_2020]
+n1_2020_nc=sum(counts_biden_nc_2020)
+n2_2020_nc=sum(counts_trump_nc_2020)
+(n1_2020_nc-n2_2020_nc)/(n1_2020_nc+n2_2020_nc)
+```
+(b) Based on the t test, the p-value for Michigan is <2e-16, a very small p value, meaning we reject the null hypothesis in favor of the alternative, that the true mean of the difference in poll counts in Michigan is greater than 0. Therefore, Biden holds significant favor within Michigan, which is in line with our data from part (a). For the state of Georgia, we find a p value of 3e-12, also very small, leading to the same conclusion. For North Carolina, we get another small p value of <2e-16, which is again in line with part (a). This proves that this test is significant. However, a potential problem with this test is that it assumes that all trials are independent, when that may not necessarily be the case. 
+``` {r}
+t.test(polls_data_2020$pct[index_biden_mich_2020],polls_data_2020$pct[index_trump_mich_2020],paired=T,alternative='greater')
+t.test(polls_data_2020$pct[index_biden_georgia_2020],polls_data_2020$pct[index_trump_georgia_2020],paired=T,alternative='greater')
+t.test(polls_data_2020$pct[index_biden_nc_2020],polls_data_2020$pct[index_trump_nc_2020],paired=T,alternative='greater')
+```
+(c) Based on the Wilcox rank test, the p value for Michigan is <2e-16, meaning we reject the null hypothesis in favor of the location shift being greater than 0, meaning Biden holds favor in Michigan. This checks out with our previous data. The p value for Georgia is small at 9e-15, below any reasonable significance level such as 0.05, meaning we reject the null hypothesis, and we believe the true difference to be greater than 0, which matches our notion that Biden held a significant lead in the state. We get a p value of <2e-16 as well for North Carolina, which gives us the same conclusion. There seems to be no potential problems with this test.
+``` {r}
+wilcox.test(polls_data_2020$pct[index_biden_mich_2020],polls_data_2020$pct[index_trump_mich_2020],alternative='greater')
+wilcox.test(polls_data_2020$pct[index_biden_georgia_2020],polls_data_2020$pct[index_trump_georgia_2020],alternative='greater')
+wilcox.test(polls_data_2020$pct[index_biden_nc_2020],polls_data_2020$pct[index_trump_nc_2020],alternative='greater')
+```
+(d) From the linear model and observations, Georgia looks to have the closest election by percentage difference. While both Georgia and North Carolina have a decent amount of cluster around the 0.0% difference mark in the later months we are examining, Georgia shows more regression to the means, though none of these states show a great linear fit in these graphs. Finally, Michigan has the smallest residual standard error, proving its fit to the mean, however that line and mean regresses towards a larger percentage difference in the 0.05 to 0.1 areas.
+``` {r}
+date_2020= mdy(polls_data_2020$end_date)
+counts_mich_for_lm_2020 <- data.frame(
+  data_date = date_2020[index_trump_mich_2020],
+  percentage_diff = (counts_biden_mich_2020-counts_trump_mich_2020)/(counts_biden_mich_2020+counts_trump_mich_2020)
+)
+lm_model_mich_2020=lm(percentage_diff~(data_date),data=counts_mich_for_lm_2020)
+summary(lm_model_mich_2020)
+conf_interval_mich_fitted_2020= predict(lm_model_mich_2020, newdata=counts_mich_for_lm_2020, interval="confidence",
+                                       level = 0.95)
+plot(counts_mich_for_lm_2020$data_date,counts_mich_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Michigan')
+polygon(c(rev(counts_mich_for_lm_2020$data_date), counts_mich_for_lm_2020$data_date), 
+        c(rev(conf_interval_mich_fitted_2020[,2]), conf_interval_mich_fitted_2020[ ,3]), col = 'grey80', border = NA)
+lines(counts_mich_for_lm_2020$data_date,counts_mich_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Michigan')
+counts_georgia_for_lm_2020 <- data.frame(
+  data_date = date_2020[index_trump_georgia_2020],
+  percentage_diff = (counts_biden_georgia_2020-counts_trump_georgia_2020)/(counts_biden_georgia_2020+counts_trump_georgia_2020)
+)
+lm_model_georgia_2020=lm(percentage_diff~(data_date),data=counts_georgia_for_lm_2020)
+summary(lm_model_georgia_2020)
+conf_interval_georgia_fitted_2020= predict(lm_model_georgia_2020, newdata=counts_georgia_for_lm_2020, interval="confidence",
+                                       level = 0.95)
+plot(counts_georgia_for_lm_2020$data_date,counts_georgia_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Georgia')
+polygon(c(rev(counts_georgia_for_lm_2020$data_date), counts_georgia_for_lm_2020$data_date), 
+        c(rev(conf_interval_georgia_fitted_2020[,2]), conf_interval_georgia_fitted_2020[ ,3]), col = 'grey80', border = NA)
+lines(counts_georgia_for_lm_2020$data_date,counts_georgia_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='Georgia')
+counts_nc_for_lm_2020 <- data.frame(
+  data_date = date_2020[index_trump_nc_2020],
+  percentage_diff = (counts_biden_nc_2020-counts_trump_nc_2020)/(counts_biden_nc_2020+counts_trump_nc_2020)
+)
+lm_model_nc_2020=lm(percentage_diff~(data_date),data=counts_nc_for_lm_2020)
+summary(lm_model_nc_2020)
+conf_interval_nc_fitted_2020= predict(lm_model_nc_2020, newdata=counts_nc_for_lm_2020, interval="confidence",
+                                       level = 0.95)
+plot(counts_nc_for_lm_2020$data_date,counts_nc_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+polygon(c(rev(counts_nc_for_lm_2020$data_date), counts_nc_for_lm_2020$data_date), 
+        c(rev(conf_interval_nc_fitted_2020[,2]), conf_interval_nc_fitted_2020[ ,3]), col = 'grey80', border = NA)
+lines(counts_nc_for_lm_2020$data_date,counts_nc_for_lm_2020$percentage_diff,
+     col='black',pch=20,type='p',xlab='date',ylab='difference in counts (%)',main='North Carolina')
+```
+(e) From the real results of the 2020 election, Georgia had the smallest margin in terms of percentage difference, with a 0.2 percent difference. Two reasons for which the real results may differ from what the polls indicate are sampling and response bias, as well as methodological issues.
+
+(f) Polls do not always correctly predict the candidate who wins each state in an election. There can be biases in polls that contribute to these inaccuracies. Some possible reasons for poll biases in predicting state winners include sampling bias and non response bias.
+
+3. (a) Looking at the difference in percentage between 2016 and 2020, we see mostly purple across the board, indicating most of the country had a great difference between those election years. The extremity of those differences in just 4 years suggests a great change in political climate and voter satisfaction during the Trump presidency.
+``` {r}
+polls_data_2016_enddate=mdy(polls_data_2016$enddate)
+polls_data_2016_after_sep=polls_data_2016[which(polls_data_2016_enddate>=start_date_2016&polls_data_2016_enddate<=end_date_2016),]
+
+poll_state_sum_clinton_2016=aggregate(polls_data_2016_after_sep$total.clinton, by=list(State=polls_data_2016_after_sep$state),FUN=sum)
+poll_state_sum_trump_2016=aggregate(polls_data_2016_after_sep$total.trump, by=list(State=polls_data_2016_after_sep$state),FUN=sum)
+
+poll_state_diff_percentage=poll_state_sum_clinton_2016
+poll_state_diff_percentage[,2]=(poll_state_sum_clinton_2016[,2]-poll_state_sum_trump_2016[,2])/(poll_state_sum_clinton_2016[,2]+poll_state_sum_trump_2016[,2])
+delete_index=which(levels(poll_state_diff_percentage[,1])=='U.S.')
+if(length(delete_index)>0){
+  poll_state_diff_percentage=poll_state_diff_percentage[-delete_index,]
+  poll_state_diff_percentage[,1]
+}
+library(usmap)
+library(ggplot2)
+state_poll_2016 <- data.frame(
+  state =poll_state_diff_percentage[,1],
+  diff_percentage=poll_state_diff_percentage[,2]
+)
+index_selected=which(date_2020>='2020-09-01') 
+polls_data_2020_after_sep=polls_data_2020[index_selected,]
+polls_data_2020_after_sep=polls_data_2020_after_sep[which(polls_data_2020$answer=='Biden'|polls_data_2020$answer=='Trump'),]
+index_biden_2020=which(polls_data_2020_after_sep$answer=='Biden')
+index_trump_2020=which(polls_data_2020_after_sep$answer=='Trump' )
+counts_biden_2020=polls_data_2020$pct[index_biden_2020]*polls_data_2020$sample_size[index_biden_2020]
+counts_trump_2020=polls_data_2020$pct[index_trump_2020]*polls_data_2020$sample_size[index_trump_2020]
+polls_data_2020$total.biden=rep(0,dim(polls_data_2020)[1])
+polls_data_2020$total.trump=rep(0,dim(polls_data_2020)[1])
+polls_data_2020$total.biden[index_biden_2020]=counts_biden_2020
+polls_data_2020$total.trump[index_trump_2020]=counts_trump_2020
+poll_state_sum_biden_2020=aggregate(polls_data_2020$total.biden, by=list(State=polls_data_2020$state),FUN=sum)
+poll_state_sum_trump_2020=aggregate(polls_data_2020$total.trump, by=list(State=polls_data_2020$state),FUN=sum)
+poll_state_sum_biden_2020=poll_state_sum_biden_2020[-1,]
+poll_state_sum_trump_2020=poll_state_sum_trump_2020[-1,]
+state_poll_2020 <- data.frame(
+  state =poll_state_sum_biden_2020[,1],
+  diff_percentage=(poll_state_sum_biden_2020[,2]-poll_state_sum_trump_2020[,2])/(poll_state_sum_biden_2020[,2]+poll_state_sum_trump_2020[,2])
+)
+limit_val=c(min(state_poll_2016$diff_percentage,state_poll_2020$diff_percentage),
+            max(state_poll_2016$diff_percentage,state_poll_2020$diff_percentage))
+plot_usmap(data = state_poll_2016, values = "diff_percentage", color = "black") +
+  scale_fill_gradient2(name = "difference (%)",   low= "red",
+                       mid = "white",
+                       high = "blue",
+                       midpoint = 0,limits=limit_val)+
+  theme(legend.position = "right")+
+ggtitle("2016") 
+plot_usmap(data = state_poll_2020, values = "diff_percentage", color = "black") +
+  scale_fill_gradient2(name = "difference (%)",   low= "red",
+                       mid = "white",
+                       high = "blue",
+                       midpoint = 0,limits=limit_val)+
+  theme(legend.position = "right")+
+ggtitle("2020") 
+state_poll_2016$state
+state_poll_2020$state
+state_poll_2016=state_poll_2016[-c(31,33,50),]
+state_poll_2020_2016_diff <- data.frame(
+  state =state_poll_2020$state,
+  diff=state_poll_2020$diff_percentage-state_poll_2016$diff_percentage
+)
+plot_usmap(data = state_poll_2020_2016_diff, values = "diff", color = "black") +
+  scale_fill_gradient2(name = "difference between 2016 and 2020 (%)",   low= "red",
+                       mid = "white",
+                       high = "blue",
+                       midpoint = 0)+
+  theme(legend.position = "right")+
+  ggtitle("difference between 2020 and 2016") 
+```
+(b) Based on the plots for (a), Iowa, Florida, Texas, Maine, Ohio, Georgia, Nebraska, Nevada, Kansas, and Montana, were 10 battleground states in 2020. They had the smallest percentage differences when looking at the polls as well as the graphs.
+``` {r}
+state_poll_2020 %>% arrange(abs(diff_percentage)) %>% slice(1:10)
+```
+(c) A lot of states became more red than blue between 2016 and 2020.
+``` {r}
+state_poll_2020_2016_diff %>% kbl(digits = 3) %>% kable_styling(bootstrap_options = c("striped", "hover","condensed"))
+
+```
+(d) In both the 2016 and 2020 US presidential elections, polls did underestimate the percentage of the real votes received, especially for Donald Trump in both years. The bias in the polls can be explained by non response bias, sampling and weighting issues, differential in voter turnout, and volatile and late-deciding voters, to name a few.
+
+4. (a) 
+``` {r}
+state_level_polls = data.frame(State = state_poll_2016$state, diff_2016 = state_poll_2016$diff_percentage,diff_2020 = state_poll_2020$diff_percentage, change = state_poll_2020_2016_diff$diff)
+state_level_polls
+```
+(b) 5 states that may change their electoral votes in 2020 would be Nebraska, Montana, Georgia, Kansas, and Texas, because they had a small 2020 differential but a large change from 2016 to 2020.
+
+(c) As mentioned previously, Georgia would be likely to change their electoral vote. Arizona could flip in a future election due to a low 2020 differential and a still substantial change between the election years.The same is true for Michigan for the same reason. However, Wisconsin and Pennsylvania would be unlikely to flip due to higher 2020 differentials and very low changes between election years. Two other states that could flip in future elections include Kansas and Texas, for the same reasons as stated before.
+
+5. (a) Most of the polls in Iowa were accurate to predict the elected candidates, but that was not the case in Florida. Some potential reasons for this inaccuracy in Florida include sampling and weighting issues, as well as non response bias.   
+``` {r}
+data_iowa_2016 = polls_data_2016 %>% filter(state == "Iowa")
+data_iowa_2020 = polls_data_2020 %>% filter(state == "Iowa")
+data_florida_2016 = polls_data_2016 %>% filter(state == "Florida") 
+data_florida_2020 = polls_data_2020 %>% filter(state == "Florida")
+iowa_accuracy_2016 = data_iowa_2016$adjpoll_clinton < data_iowa_2016$adjpoll_trump
+florida_accuracy_2016 = data_florida_2016$adjpoll_clinton < data_florida_2016$adjpoll_trump
+sum(iowa_accuracy_2016)/length(iowa_accuracy_2016)
+sum(florida_accuracy_2016)/length(florida_accuracy_2016)
+```
+(b) For Iowa, one poll that approximately predicted the final outcome of the election was the Des Moines Register Poll. This poll has a reputation for accurately capturing the preferences of Iowa voters. It is widely recognized as a reliable source of information on Iowa elections.
+
+(c) Some possible reasons accounting for the bias in polls for these two states include demographic composition, differential/variations in voter turnout, as well as volatile and late-deciding voters.
+
+(d) Some possible ways to improve polls for political elections include refining sampling methodologies to ensure a more representative sample of the population. In addition, non response bias needs to be reduced. Efforts can be made to increase response rates in polls, particularly among groups that are historically less likely to participate. Finally, encouraging collaboration and peer review among polling organizations can promote the sharing of best practices and the identification of potential biases or methodological shortcomings. This can enhance the accuracy of overall predictions.

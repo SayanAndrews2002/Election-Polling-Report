@@ -1,0 +1,44 @@
+---
+title: "Data Analytic Report"
+author: "Sayan Andrews (5311352)"
+date: "`r format(Sys.Date(), '%5/%25/%2023')`"
+output: pdf_document
+---
+
+```{r setup, echo=FALSE}
+library(knitr)
+# set global chunk options: images will be 7x5 inches
+knitr::opts_chunk$set(fig.width=7, fig.height=5)
+options(digits = 4)
+
+
+## indents are for indenting r code as formatted text
+## They may need to be adjusted depending on your OS
+# if your output looks odd, increase or decrease indent
+indent1 = '    '
+indent2 = '        '
+indent3 = '            '
+```
+``` {r}
+polls_data_2016 <- read.csv(file = "president_general_polls_sorted_end_date_2016.csv")
+polls_data_2020 <- read.csv(file = "president_polls_2020.csv")
+```
+1. (a) We can see that Clinton is ahead in the state of Michigan, by a percentage difference of 3.752%. Trump is ahead in the state of Georgia, by a percentage difference of -5.56%. Clinton is barely ahead in the state of North Carolina, by a percentage difference of 0.2245%.
+``` {r}
+library(lubridate)
+date_2016=mdy(polls_data_2016$end_date)
+index_selected=which(date_2016>='2016-08-01')
+polls_data_2016=polls_data_2016[index_selected,]
+index_mich=which(polls_data_2016$state=="Michigan")
+index_georgia=which(polls_data_2016$state=="Georgia")
+index_nc=which(polls_data_2016$state=="North Carolina")
+n1=sum(polls_data_2016$total.clinton[index_mich])
+n2=sum(polls_data_2016$total.trump[index_mich])
+n1/(n1+n2)-n2/(n1+n2)
+n3=sum(polls_data_2016$total.clinton[index_georgia])
+n4=sum(polls_data_2016$total.trump[index_georgia])
+n3/(n3+n4)-n4/(n3+n4)
+n5=sum(polls_data_2016$total.clinton[index_nc])
+n6=sum(polls_data_2016$total.trump[index_nc])
+n5/(n5+n6)-n6/(n5+n6)
+```
