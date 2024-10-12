@@ -1,21 +1,36 @@
-ELECTION POLLING PROJECT
+# Election Polling Project
 
-SUMMARY:
+## Summary
 
-In the Election Poll Project, I utilized R programming to conduct a comprehensive analysis of polling data related to the US presidential elections in 2016 and 2020. The focus of the project was on exploring and comparing polls in specific states and evaluating changes in polling outcomes over the two election years.
+In the **Election Poll Project**, I utilized R programming to conduct a comprehensive analysis of polling data related to the US presidential elections in 2016 and 2020. The focus of the project was on exploring and comparing polls in specific states and evaluating changes in polling outcomes over the two election years.
 
-DETAILS:
+## Project Details
 
-**Data Exploration:** Utilized R code to thoroughly explore and clean polling data, ensuring accuracy and reliability for subsequent analysis, including organizing the months I wanted and the states I wanted. 
+### Data Exploration
+- **Data Cleaning:** Utilized R code to thoroughly explore and clean polling data, ensuring accuracy and reliability for analysis.
+- **State and Time Selection:** Organized the data by months and focused on specific states for detailed analysis.
 
-**Geographical Analysis:** Focused on specific states, including Michigan, Georgia, and North Carolina, to understand the nuances of polling trends in these regions for both the 2016 and 2020 elections.
+### Geographical Analysis
+- **State Focus:** Concentrated on states like Michigan, Georgia, and North Carolina to explore polling trends for the 2016 and 2020 elections.
+- **State Insights:** Analyzed the nuances of polling trends within these states to identify changes or consistencies in voter behavior.
 
-**Temporal Comparisons:** Conducted a temporal analysis, comparing polling data across the two election years to identify shifts or consistencies in voter preferences. This included exploring percentage differences, through sheer numbers as well as visualization graphs. Also conducted paired t tests to calculate p-values and determine who was in favor of winning based on the polls. Did the same with Wilcoxon signed rank tests. Drew conclusions regarding sampling and response bias, and the correctness of polls in predicting accurately certain states. Compared my results to real results. 
+### Temporal Comparisons
+- **Yearly Comparisons:** Conducted a temporal analysis to compare polling data across 2016 and 2020, identifying shifts or patterns in voter preferences.
+- **Statistical Tests:** Used paired t-tests and Wilcoxon signed-rank tests to calculate p-values and determine polling accuracy.
+- **Poll Accuracy:** Compared the polling data predictions with actual election results, examining sampling bias and response bias.
 
-**State-to-State Comparisons:** Extended the analysis to include a comparative study of polling in Iowa and Florida, examining changes or similarities in these states over the specified timeframe. Explored how accurate polls were in predicting elected candidates. 
+### State-to-State Comparisons
+- **Iowa and Florida:** Extended the analysis to compare polling trends in Iowa and Florida, exploring changes or similarities in these states over the two elections.
+- **Prediction Accuracy:** Evaluated how well the polls predicted the outcomes in these battleground states.
 
-**Overall Differences:** Explored and visualized the overall differences in polls between the 2016 and 2020 elections, providing a holistic perspective on national polling trends. Generated maps with color representing percentage differences to make these determinations. This allowed me to find the battleground states, and analyze shifts in voter preference between leftists and rightists. Looked at percentage differences in 2016 and 2020, and the change in that difference to predict states that may have changed their electoral votes. 
+### Overall Differences
+- **National Trends:** Visualized the overall polling differences between the 2016 and 2020 elections, highlighting key battleground states.
+- **Percentage Differences:** Generated maps to visualize percentage differences and shifts in voter preferences across the country.
+- **Electoral Vote Shifts:** Analyzed changes in electoral votes by comparing percentage shifts between leftist and rightist voter bases from 2016 to 2020.
 
-**Report Generation:** Compiled findings into a comprehensive data analytic report, presenting insights derived from the analysis of election polls. Discussed potential reasons for bias and how to make improvements going forward.
+### Report Generation
+- **Comprehensive Report:** Compiled the findings into a detailed report, discussing insights derived from polling data and providing suggestions for reducing bias in future polls.
 
-This project not only showcased my proficiency in R programming but also demonstrated my ability to extract meaningful insights from complex political data. Analyzing election polls requires a deep understanding of statistical methods and an ability to present findings clearly. The Election Poll Project reflects my commitment to data-driven analysis and my capacity to derive valuable conclusions from large and dynamic datasets.
+## Conclusion
+
+This project demonstrated my proficiency in R programming and my ability to analyze complex political datasets. The **Election Poll Project** reflects my capability to perform data-driven analysis and extract meaningful insights from election polling data, offering valuable perspectives on polling accuracy and voter trends across election years.
